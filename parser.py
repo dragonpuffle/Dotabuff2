@@ -1,6 +1,8 @@
 import requests
 from bs4 import BeautifulSoup as bs
 import html5lib
+import psycopg2
+import random
 
 def get_items():
     URL = 'https://liquipedia.net/dota2/Items'
@@ -11,9 +13,7 @@ def get_items():
     items = items[0].findAllNext('div',limit=194)
 
     final_items = [item.a.get('title')[:-1:].split(' (') for item in items]
-    final_items
-    print(final_items)
-
+    return final_items
 
 def get_heroes():
     URL = 'https://liquipedia.net/dota2/Portal:Heroes'
@@ -32,10 +32,8 @@ def get_heroes():
 
 
 def get_abilities(heroes):
-    j = 0
+    j = 1
     for hero in heroes:
-
-        hero_abilities = []
         URL= 'https://liquipedia.net/dota2/' + hero + '#Abilities'
         response = requests.get(URL)
         soup = bs(response.content, "html5lib")
@@ -44,13 +42,46 @@ def get_abilities(heroes):
         i=0
         if len(abilities) == len(abilities_desc):
             for ability in abilities:
-                hero_abilities.append((j,hero,ability.text,abilities_desc[i].text))
+
+                print((j,ability.text,abilities_desc[i].text))
                 i+=1
-        print(hero_abilities)
         j+=1
 
 
+def prepare_heroes(heroes):
+    new_heroes=[]
+    #with connection.cursor() as cursor:
+    for hero in heroes:
+        ban_rate=random.randint(0,15)
+        win_rate = random.randint(40, 65)
+        pick_rate = random.randint(1, 25)
+        if win_rate <=45:
+            tier='D'
+        elif win_rate <=50:
+            tier = 'C'
+        elif win_rate <=52:
+            tier = 'B'
+        elif win_rate <=56:
+            tier = 'A'
+        else:
+            tier = 'S'
+            #cursor.execute("SELECT public.insert_hero(%s, %s, %s, %s, %s);", (hero,tier,win_rate,pick_rate,ban_rate))
+            new_heroes.append((hero,tier,win_rate,pick_rate,ban_rate))
+    #connection.commit()
 
-#get_items()
-heroes= get_heroes()
-get_abilities(heroes)
+
+# connection = psycopg2.connect(
+#     dbname="Dotabuff2",
+#     user="postgres",
+#     password="1234",
+#     host="localhost",
+#     port="5432"
+# )
+
+# items = get_items()
+#
+# connection.close()
+
+#heroes= get_heroes()
+#prepare_heroes(heroes)
+#get_abilities(heroes)
